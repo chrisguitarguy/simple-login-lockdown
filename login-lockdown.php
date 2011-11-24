@@ -24,10 +24,17 @@ License: GPL
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-add_action( 'wp_login_failed', 'cd_ll2_failed_login' );
-function cd_ll2_failed_login( $username )
+function cd_sll_get_ip()
 {
 	$ip = isset( $_SERVER['REMOTE_ADDR'] ) ? $_SERVER['REMOTE_ADDR'] : false;
+	if( ! $ip ) return false;
+	return apply_filters( 'cd_sll_pre_ip', $ip );
+}
+
+add_action( 'wp_login_failed', 'cd_sll_failed_login' );
+function cd_sll_failed_login( $username )
+{
+	$ip = cd_sll_get_ip();
 	if( ! $ip ) return;
 	
 	if( $count = get_option( sprintf( 'cdll2_%s', $ip ) ) )
@@ -40,10 +47,10 @@ function cd_ll2_failed_login( $username )
 	}
 }
 
-add_action( 'login_init', 'cd_ll2_maybe_kill_login' );
-function cd_ll2_maybe_kill_login()
+add_action( 'login_init', 'cd_sll_maybe_kill_login' );
+function cd_sll_maybe_kill_login()
 {
-	$ip = isset( $_SERVER['REMOTE_ADDR'] ) ? $_SERVER['REMOTE_ADDR'] : false;
+	$ip = cd_sll_get_ip();
 	if( ! $ip ) return;
 	
 	if( $count = get_option( sprintf( 'cdll2_%s', $ip ) ) )
@@ -69,10 +76,10 @@ function cd_ll2_maybe_kill_login()
 	}
 }
 
-add_action( 'wp_login', 'cd_ll2_clear_lockdown', 10, 0 );
-function cd_ll2_clear_lockdown()
+add_action( 'wp_login', 'cd_sll_clear_lockdown', 10, 0 );
+function cd_sll_clear_lockdown()
 {
-	$ip = isset( $_SERVER['REMOTE_ADDR'] ) ? $_SERVER['REMOTE_ADDR'] : false;
+	$ip = cd_sll_get_ip();
 	if( ! $ip ) return;
 	delete_option( sprintf( 'cdll2_%s', $ip ) );
 	delete_transient( sprintf( 'locked_down_%s', $ip ) );
