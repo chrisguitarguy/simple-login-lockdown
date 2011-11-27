@@ -27,7 +27,6 @@ License: GPL
 function cd_sll_get_ip()
 {
 	$ip = isset( $_SERVER['REMOTE_ADDR'] ) ? $_SERVER['REMOTE_ADDR'] : false;
-	if( ! $ip ) return false;
 	return apply_filters( 'cd_sll_pre_ip', $ip );
 }
 
