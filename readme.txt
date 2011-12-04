@@ -10,7 +10,7 @@ Simple Login Lockdown prevents brute force login attacks/attempts on your WordPr
 
 == Description ==
 
-imple login lock down is a way to protect your WordPress blog from brute force login attacks.
+Simple login lock down is a way to protect your WordPress blog from brute force login attacks.
 
 How it works:
 1. An attacker attempts to login and fails
