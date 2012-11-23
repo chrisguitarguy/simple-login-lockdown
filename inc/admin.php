@@ -44,13 +44,11 @@
 class Simple_Login_Lockdown_Admin extends Simple_Login_Lockdown
 {
     /**
-     * setting name.
+     * Settings section.
      *
-     * @sinace  0.2
-     * @access  private
-     * @var     string
+     * @since   1.0
      */
-    private $setting;
+    const SECTION = 'simple-login-lockdown';
 
     /**
      * The page on which the settings reside.
@@ -60,15 +58,6 @@ class Simple_Login_Lockdown_Admin extends Simple_Login_Lockdown
      * @var     string
      */
     private $page;
-
-    /**
-     * Settings section.
-     *
-     * @since   1.0
-     * @access  private
-     * @var     string
-     */
-    private $section;
 
     /**
      * Container for the plugin instance.
@@ -83,9 +72,7 @@ class Simple_Login_Lockdown_Admin extends Simple_Login_Lockdown
     {
         global $wp_version;
 
-        $this->setting = Simple_Login_Lockdown::SETTING;
         $this->page = version_compare($wp_version, '3.5', '<=') ? 'reading' : 'privacy';
-        $this->section = 'simple-login-lockdown';
     }
 
     /**
@@ -142,12 +129,12 @@ class Simple_Login_Lockdown_Admin extends Simple_Login_Lockdown
     {
         register_setting(
             $this->page,
-            $this->setting,
+            self::SETTING,
             array($this, 'clean_settings')
         );
 
         add_settings_section(
-            $this->section,
+            self::SECTION,
             __('Simple Login Lockdown', 'simple-login-lockdown'),
             array($this, 'section_cb'),
             $this->page
@@ -158,7 +145,7 @@ class Simple_Login_Lockdown_Admin extends Simple_Login_Lockdown
             __('Login Attempt Limit', 'simple-login-lockdown'),
             array($this, 'attempts_cb'),
             $this->page,
-            $this->section,
+            self::SECTION,
             array('label_for' => "{$this->setting}[limit]", 'key' => 'limit')
         );
 
@@ -167,7 +154,7 @@ class Simple_Login_Lockdown_Admin extends Simple_Login_Lockdown
             __('Login Lockdown Time', 'simple-login-lockdown'),
             array($this, 'time_cb'),
             $this->page,
-            $this->section,
+            self::SECTION,
             array('label_for' => "{$this->setting}[time]", 'key' => 'time')
         );
     }
