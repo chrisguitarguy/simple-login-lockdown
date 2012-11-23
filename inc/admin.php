@@ -1,86 +1,255 @@
 <?php
-class simpleLoginLockdownAdmin
+/**
+ * Simple Login Lockdown
+ *
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2012 Christopher Davis
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+ * DEALINGS IN THE SOFTWARE.
+ *
+ * @category    WordPress
+ * @package     Simple_Login_Lockdown
+ * @copyright   Christopher Davis 2012
+ * @license     http://opensource.org/licenses/MIT The MIT License (MIT)
+ */
+
+!defined('ABSPATH') && exit;
+
+/**
+ * Admin area functionality (a few fields) for the plugin
+ *
+ * @todo    At some point when WP requires PHP 5.3+ don't repeat the static
+ *          methods and instance crap.
+ *
+ * @since   0.1
+ * @author  Christopher Davis <http://christopherdavis.me>
+ */
+class Simple_Login_Lockdown_Admin extends Simple_Login_Lockdown
 {
-    private $setting = 'cd_sll_options';
-    
-    function __construct()
-    {
-        add_action( 'admin_init', array( $this, 'init' ) );
-        add_action( 'load-options-privacy.php', array( $this, 'load' ) );
-        add_action( 'plugin_action_links_' . CD_SLL_NAME, array( $this, 'link' ), 10, 1 );
-    }
-    
     /**
-     * Fires on admin_init and register our setting
+     * setting name.
+     *
+     * @sinace  0.2
+     * @access  private
+     * @var     string
      */
-    function init()
+    private $setting;
+
+    /**
+     * The page on which the settings reside.
+     *
+     * @since   1.0
+     * @access  private
+     * @var     string
+     */
+    private $page;
+
+    /**
+     * Settings section.
+     *
+     * @since   1.0
+     * @access  private
+     * @var     string
+     */
+    private $section;
+
+    /**
+     * Container for the plugin instance.
+     *
+     * @since   1.0
+     * @access  private
+     * @var     object (an instance of this class)
+     */
+    private static $ins = null;
+
+    public function __construct()
+    {
+        global $wp_version;
+
+        $this->setting = Simple_Login_Lockdown::SETTING;
+        $this->page = version_compare($wp_version, '3.5', '<=') ? 'reading' : 'privacy';
+        $this->section = 'simple-login-lockdown';
+    }
+
+    /**
+     * Get the instance of this class.
+     *
+     * @since   1.0
+     * @access  public
+     * @return  Simple_Login_Lockdown
+     */
+    public static function instance()
+    {
+        is_null(self::$ins) && self::$ins = new self;
+        return self::$ins;
+    }
+
+    /**
+     * Make it happen. Hook the `_setup` method into `plugins_loaded`.
+     *
+     * @since   1.0
+     * @access  public
+     * @uses    add_action
+     * @return  void
+     */
+    public static function init()
+    {
+        add_action('plugins_loaded', array(self::instance(), '_setup'));
+    }
+
+    /**
+     * Hooked into `plugins_loaded`.  Adds the rest of the actions.
+     *
+     * @since   1.0
+     * @access  public
+     * @uses    add_action
+     * @return  void
+     */
+    public function _setup()
+    {
+        add_action('admin_init', array($this, 'register'));
+        add_action('plugin_action_links_' . CD_SLL_NAME, array($this, 'link'));
+    }
+
+    /**
+     * Fires on `admin_init`. Registers the settings and settings field.
+     *
+     * @since   1.0
+     * @access  public
+     * @uses    register_setting
+     * @uses    add_settings_section
+     * @uses    add_settings_field
+     * @return  void
+     */
+    public function register()
     {
         register_setting(
-            'reading',
+            $this->page,
             $this->setting,
-            array( $this, 'clean_settings' )
+            array($this, 'clean_settings')
+        );
+
+        add_settings_section(
+            $this->section,
+            __('Simple Login Lockdown', 'simple-login-lockdown'),
+            array($this, 'section_cb'),
+            $this->page
+        );
+
+        add_settings_field(
+            "{$this->setting}[limit]",
+            __('Login Attempt Limit', 'simple-login-lockdown'),
+            array($this, 'attempts_cb'),
+            $this->page,
+            $this->section,
+            array('label_for' => "{$this->setting}[limit]", 'key' => 'limit')
+        );
+
+        add_settings_field(
+            "{$this->setting}[time]",
+            __('Login Lockdown Time', 'simple-login-lockdown'),
+            array($this, 'time_cb'),
+            $this->page,
+            $this->section,
+            array('label_for' => "{$this->setting}[time]", 'key' => 'time')
         );
     }
     
     /**
-     * Adds the settings fields to the options-privacy.php page in the
-     * WordPress admin
+     * Adds a "settings" link to the plugin page.
      * 
-     * @since 0.2
+     * @since   0.2
+     * @access  public
+     * @return  array
      */
-    function load()
-    {   
-        add_settings_section(
-            'cd_sll_settings',
-            __( 'Simple Login Lockdown', 'cdsll' ),
-            array( $this, 'section_cb' ),
-            'reading'
+    public function link($links)
+    {
+        $links['settings'] = sprintf(
+            '<a href="%1$s">%2$s</a>',
+            admin_url("options-{$this->page}.php"),
+            esc_html__('Settings', 'simple-login-lockdown')
         );
-        
-        add_settings_field(
-            'cd_sll_attempts',
-            __( 'Login attempt limit', 'cdsll' ),
-            array( $this, 'attempts_cb' ),
-            'reading',
-            'cd_sll_settings',
-            array( 'label_for' => 'cd_sll_attempts' )
-        );
-        
-        add_settings_field(
-            'cd_sll_time',
-            __( 'Login lockdown time', 'cdsll' ),
-            array( $this, 'time_cb' ),
-            'reading',
-            'cd_sll_settings',
-            array( 'label_for' => 'cd_sll_time' )
-        );
+
+        return $links;
     }
-    
+
+    /**
+     * Validate the settings on way into the database.
+     * 
+     * @since   0.2
+     * @access  public
+     * @uses    absint
+     * @return  array
+     */
+    public function clean_settings($in)
+    {
+        $out = array();
+
+        foreach(array('time', 'limit') as $k)
+        {
+            if(!empty($in[$k]))
+                $out[$k] = absint($in[$k]);
+        }
+
+        return $out;
+    }
+
+    /********** Settings Field/Section Callbacks **********/
+
     /**
      * The callback for the Simple Login Lockdown settings section
      * 
-     * @since 0.2
+     * @since   0.2
+     * @access  public
+     * @uses    _e
+     * @return  void
      */
-    function section_cb()
+    public function section_cb()
     {
         echo '<p class="description">';
-        _e( 'These options were added by Simple Login Lockdown and control access to your login form.', 'cdsll' );
+        _e('These options were added by Simple Login Lockdown and control ' .
+            'access to your login form.', 'simple-login-lockdown');
         echo '</p>';
     }
     
     /**
      * The callback for the attempt allowance settings field
      * 
-     * @since 0.2
+     * @since   0.2
+     * @access  public
+     * @uses    selected
+     * @param   array $args Field arguments from add_settings_field
+     * @return  void
      */
-    function attempts_cb()
+    public function attempts_cb($args)
     {
-        $opts = get_option( $this->setting );
-        $limit = isset( $opts['limit'] ) && $opts['limit'] ? $opts['limit'] : 5;
-        echo '<select id="cd_sll_attempts" name="' . $this->setting . '[limit]">';
-        foreach( range( 5, 20 ) as $i )
+        $limit = self::opt($args['key'], 5);
+
+        printf('<select name="%1$s" id="%1$s">', $args['label_for']);
+        foreach(range(5, 20) as $_ => $i)
         {
-                echo "<option value='{$i}' " . selected( $i, absint( $limit ), false ) . ">{$i}</option>";
+            printf(
+                '<option value="%1$s" %2$s>%1$s</option>',
+                esc_attr($i),
+                selected($limit, $i, false)
+            );
         }
         echo '</select>';
     }
@@ -88,61 +257,40 @@ class simpleLoginLockdownAdmin
     /**
      * The callback for the time limit settings field
      * 
-     * @since 0.2
+     * @since   0.2
+     * @access  public
+     * @uses    selected
+     * @return  void
      */
-    function time_cb()
+    public function time_cb($args)
     {
-        $opts = get_option( $this->setting );
-        $time = isset( $opts['time'] ) && $opts['time'] ? $opts['time'] : 60;
-        
-        $options = array(
-            30      => __( '30 Minutes', 'cdsll' ),
-            60      => __( '60 Minutes', 'cdsll' ),
-            120     => __( '2 Hours', 'cdsll' ),
-            180     => __( '3 Hours', 'cdsll' ),
-            240     => __( '4 Hours', 'cdsll' ),
-            480     => __( '8 Hours', 'cdsll' ),
-            1440    => __( '24 Hours', 'cdsll' )
-        );
-        echo '<select id="cd_sll_time" name="' . $this->setting . '[time]">';
-        foreach( $options as $t => $label )
+        $time = self::opt($args['key'], 60);
+
+        $options = apply_filters('simple_login_lockdown_time_values', array(
+            30      => __('30 Minutes', 'simple-login-lockdown'),
+            60      => __('60 Minutes', 'simple-login-lockdown'),
+            120     => __('2 Hours', 'simple-login-lockdown'),
+            180     => __('3 Hours', 'simple-login-lockdown'),
+            240     => __('4 Hours', 'simple-login-lockdown'),
+            480     => __('8 Hours', 'simple-login-lockdown'),
+            1440    => __('24 Hours', 'simple-login-lockdown'),
+        ));
+
+        printf('<select id="%1$s" name="%1$s">', esc_attr($args['label_for']));
+        foreach($options as $t => $label)
         {
-            echo "<option value='{$t}' ". selected( $t, absint( $time ), false ) . ">" . esc_html( $label ) . "</option>";
+            printf(
+                '<option value="%1$s" %2$s>%3$s</option>',
+                esc_attr($t),
+                selected($t, absint($time), false),
+                esc_html($label)
+            );
         }
         echo '</select>';
+
         echo '<p class="description">';
-        _e( 'After the number of failed login attempts (specified above), how long should the user be locked out?', 'cdsll' );
+        _e('After the number of failed login attempts (specified above), how '.
+            'long should the user be locked out?', 'simple-login-lockdown');
         echo '</p>';
     }
-    
-    /**
-     * Cleans our settings on the way into the database
-     * 
-     * @since 0.2
-     * 
-     * @return array
-     */
-    function clean_settings( $in )
-    {
-        $out = array();
-        $out['time'] = isset( $in['time'] ) && $in['time'] ? absint( $in['time'] ) : 60;
-        $out['limit'] = isset( $in['limit'] ) && $in['limit'] ? absint( $in['limit'] ) : 5;
-        return $out;
-    }
-    
-    /**
-     * Adds a "settings" link to the plugin page.
-     * 
-     * @since 0.2
-     * 
-     * @return array
-     */
-    function link( $links )
-    {
-        $links['settings'] = '<a href="' . admin_url( 'options-reading.php' ) . '">' . __( 'Settings', 'cdsll' ) . '</a>';
-        return $links;
-    }
-    
 } // end class
-
-new simpleLoginLockdownAdmin();
