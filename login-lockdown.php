@@ -29,34 +29,14 @@ License: MIT
     DEALINGS IN THE SOFTWARE.
 */
 
-define( 'CD_SLL_PATH', plugin_dir_path( __FILE__ ) );
-define( 'CD_SLL_NAME', plugin_basename( __FILE__ ) );
+define('CD_SLL_PATH', plugin_dir_path(__FILE__));
+define('CD_SLL_NAME', plugin_basename(__FILE__));
 
-if( is_admin() && ( ! defined( 'DOING_AJAX' ) || ! DOING_AJAX )  )
-{
-	require_once( CD_SLL_PATH . 'inc/admin.php' );
-}
-else
-{
-	require_once( CD_SLL_PATH . 'inc/login.php' );
-}
+require_once(CD_SLL_PATH . 'inc/login.php');
+Simple_Login_Lockdown::init();
 
-register_activation_hook( __FILE__, 'cd_sll_plugin_activation' );
-/**
- * Activation hook.  Adds default settings.
- * 
- * @since 0.2
- * 
- * @return none
- */
-function cd_sll_plugin_activation()
+if(is_admin() && (!defined('DOING_AJAX' ) || !DOING_AJAX))
 {
-	add_option(
-		'cd_sll_options',
-		array(
-			'limit'	=> 5,
-			'time'	=> 60
-		)
-	);
+    require_once(CD_SLL_PATH . 'inc/admin.php');
 }
 
