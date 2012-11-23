@@ -39,27 +39,49 @@ If you absolutely need to get into your site right now, you can can do one of tw
 1. Fire up your FTP client and rename the `simple-login-lockdown` plugin folder
 2. Login into your favorite database administration tool (probably PHPMyAdmin) and search for `locked_down_` in the `option_name` column of the `wp_options` table.  Delete the records you find -- they should be "transients".
 
+== Hooks ==
+
+`simple_login_lockdown_ip` -- Alter the requesting IP address. Might be useful if you site is behind a proxy or load balancer.
+
+`simple_login_lockdown_allow_ip` -- Allows you to "whitelist" an IP address. It first when a log attempt fails before the attempt count is incremented. Return true and no count will be taken for the IP.
+
+`simple_login_lockdown_should_die` -- A filter that allows you to prevent the login page from `die`ing if a the requesting IP is temporarily blacklisted or the login limit has been reached.
+
+`simple_login_lockdown_count_reached` -- Fires when the requesting IP has reached its count and will be added to the blacklist for your time limit.
+
+`simple_login_lockdown_attempt` -- Fires when a login attempt is made but the requestin IP is blocked to to excessive requests.
+
+`simple_login_lockdown_time_values` -- Allows you to alter values in the login lockdown time dropdown in the admin area.
+
 == Screenshots ==
 
 1. The plugin options on the Privacy Settings page
 
 == Changelog ==
 
-= 0.1 =
-* Proof of concept
-* no options page
+= 1.0 =
+* Refactored code
+* Added a ton of filters/actions
+
+= 0.4 =
+* Added plugin options page
+
+= 0.3 =
+* small bug fix
 
 = 0.2 =
 * New function to get the IP address. 
 * Added filter to IP for flexibility with proxies, etc.
 
-= 0.3 =
-* small bug fix
-
-= 0.4 =
-* Added plugin options page
+= 0.1 =
+* Proof of concept
+* no options page
 
 == Upgrade Notice ==
 
-= 04 =
+= 1.0 =
+* A backwards-incompatible update
+* Functionality is the same, much cleaner, refactored code
+
+= 0.4 =
 * Dont get attacked!
