@@ -148,10 +148,12 @@ class Simple_Login_Lockdown
             self::delete_count($ip);
             self::set_lockdown($ip);
             $die = true;
+            do_action('simple_login_lockdown_count_reached', $ip);
         }
         elseif(self::is_locked_down($ip))
         {
             $die = true;
+            do_action('simple_login_lockdown_attempt', $ip);
         }
 
         if(apply_filters('simple_login_lockdown_should_die', $die, $ip))
