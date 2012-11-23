@@ -4,6 +4,8 @@ Plugin Name: Simple Login Lockdown
 Plugin URI: https://github.com/chrisguitarguy/simple-login-lockdown
 Description: A simple way to prevent brute force login attemps on your WordPress installation.
 Version: 1.0
+Text Domain: simple-login-lockdown
+Domain Path: /lang
 Author: Christopher Davis
 Author URI: http://christopherdavis.me
 License: MIT

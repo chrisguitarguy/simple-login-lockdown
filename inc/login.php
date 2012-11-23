@@ -103,6 +103,12 @@ class Simple_Login_Lockdown
         add_action('wp_login_failed', array($this, 'failed_login'));
         add_action('login_init', array($this, 'maybe_kill_login'));
         add_action('wp_login', array($this, 'successful_login'));
+
+        load_plugin_textdomain(
+            'simple-login-lockdown',
+            false,
+            dirname(CD_SLL_NAME) . '/lang/'
+        );
     }
 
     /**
