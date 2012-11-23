@@ -4,7 +4,7 @@ Donate link: http://www.pwsausa.org/
 Tags: security, login
 Requires at least: 3.2.0
 Tested up to: 3.3
-Stable tag: 0.4
+Stable tag: 1.0
 
 Simple Login Lockdown prevents brute force login attacks/attempts on your WordPress installation.
 
