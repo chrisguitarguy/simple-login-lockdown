@@ -30,6 +30,8 @@
  * @license     http://opensource.org/licenses/MIT The MIT License (MIT)
  */
 
+!defined('ABSPATH') && exit;
+
 /**
  * Handles all non-admin functionality for the plugin nd serves as a base
  * class.
