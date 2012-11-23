@@ -142,8 +142,6 @@ class Simple_Login_Lockdown
         if(!($ip = self::get_ip()))
             return;
 
-        $count = self::get_count($ip);
-
         $die = false;
         if(($count = self::get_count($ip)) && $count > absint(self::opt('limit', 5)))
         {
