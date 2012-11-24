@@ -71,8 +71,7 @@ class Simple_Login_Lockdown_Admin extends Simple_Login_Lockdown
     public function __construct()
     {
         global $wp_version;
-
-        $this->page = version_compare($wp_version, '3.5', '<=') ? 'reading' : 'privacy';
+        $this->page = version_compare($wp_version, '3.4.2', '<=') ? 'privacy' : 'reading';
     }
 
     /**
