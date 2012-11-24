@@ -42,4 +42,3 @@ if(is_admin() && (!defined('DOING_AJAX' ) || !DOING_AJAX))
     require_once(CD_SLL_PATH . 'inc/admin.php');
     Simple_Login_Lockdown_Admin::init();
 }
-
