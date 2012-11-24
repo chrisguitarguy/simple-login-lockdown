@@ -51,6 +51,8 @@ If you absolutely need to get into your site right now, you can can do one of tw
 
 `simple_login_lockdown_attempt` -- Fires when a login attempt is made but the requestin IP is blocked to to excessive requests.
 
+`simple_login_lockdown_response` -- Change the HTTP response code of that gets sent when a blacklisted IP attempts to login.
+
 `simple_login_lockdown_time_values` -- Allows you to alter values in the login lockdown time dropdown in the admin area.
 
 == Screenshots ==
