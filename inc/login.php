@@ -278,8 +278,13 @@ class Simple_Login_Lockdown
      */
     private static function set_lockdown($ip)
     {
+        $len = absint(self::opt('time', 60));
+
+        if(!$len || $len < 0)
+            $len = 60;
+
         set_transient(self::get_lockdown_key($ip), true,
-            apply_filters('simple_login_lockdown_length', self::opt('time', 60)));
+            apply_filters('simple_login_lockdown_length', $len * 60));
     }
 
     /**
