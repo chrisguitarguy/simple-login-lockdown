@@ -4,7 +4,7 @@ Donate link: http://www.pwsausa.org/
 Tags: security, login
 Requires at least: 3.2.0
 Tested up to: 3.5
-Stable tag: 1.0
+Stable tag: 1.1
 
 Simple Login Lockdown prevents brute force login attacks/attempts on your WordPress installation.
 
@@ -61,6 +61,10 @@ If you absolutely need to get into your site right now, you can can do one of tw
 
 == Changelog ==
 
+= 1.1 =
+* Fixed a bug that caused lock down length to be much shorter than expected
+* Fixed some warnings in the admin area due to a non-existed class property
+
 = 1.0 =
 * Refactored code
 * Added a ton of filters/actions
@@ -80,6 +84,9 @@ If you absolutely need to get into your site right now, you can can do one of tw
 * no options page
 
 == Upgrade Notice ==
+
+= 1.1 =
+* Please upgrade to get the expected time on lockdowns.
 
 = 1.0 =
 * A backwards-incompatible update
