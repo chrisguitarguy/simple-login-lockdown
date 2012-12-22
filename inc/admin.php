@@ -140,21 +140,21 @@ class Simple_Login_Lockdown_Admin extends Simple_Login_Lockdown
         );
 
         add_settings_field(
-            "{$this->setting}[limit]",
+            self::SETTING . '[limit]',
             __('Login Attempt Limit', 'simple-login-lockdown'),
             array($this, 'attempts_cb'),
             $this->page,
             self::SECTION,
-            array('label_for' => "{$this->setting}[limit]", 'key' => 'limit')
+            array('label_for' => self::SETTING . '[limit]', 'key' => 'limit')
         );
 
         add_settings_field(
-            "{$this->setting}[time]",
+            self::SETTING . '[time]',
             __('Login Lockdown Time', 'simple-login-lockdown'),
             array($this, 'time_cb'),
             $this->page,
             self::SECTION,
-            array('label_for' => "{$this->setting}[time]", 'key' => 'time')
+            array('label_for' => self::SETTING . '[time]', 'key' => 'time')
         );
     }
     
