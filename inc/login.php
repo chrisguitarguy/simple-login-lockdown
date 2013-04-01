@@ -200,7 +200,7 @@ class Simple_Login_Lockdown
      * @uses    apply_filters
      * @return  string|bool The IP if it's there, false if not.
      */
-    private function get_ip()
+    private static function get_ip()
     {
         $ip = isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : false;
         return apply_filters('simple_login_lockdown_ip', $ip);
