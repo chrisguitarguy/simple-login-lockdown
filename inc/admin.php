@@ -156,8 +156,17 @@ class Simple_Login_Lockdown_Admin extends Simple_Login_Lockdown
             self::SECTION,
             array('label_for' => self::SETTING . '[time]', 'key' => 'time')
         );
+
+        add_settings_field(
+            self::SETTING . '[trust_proxy]',
+            __('Trust Proxy Data', 'simple-login-lockdown'),
+            array($this, 'trust_proxy_cb'),
+            $this->page,
+            self::SECTION,
+            array('label_for' => self::SETTING . '[trust_proxy]', 'key' => 'trust_proxy')
+        );
     }
-    
+
     /**
      * Adds a "settings" link to the plugin page.
      * 
@@ -188,11 +197,13 @@ class Simple_Login_Lockdown_Admin extends Simple_Login_Lockdown
     {
         $out = array();
 
-        foreach(array('time', 'limit') as $k)
-        {
-            if(!empty($in[$k]))
+        foreach (array('time', 'limit') as $k) {
+            if (!empty($in[$k])) {
                 $out[$k] = absint($in[$k]);
+            }
         }
+
+        $out['trust_proxy'] = empty($in['trust_proxy']) ? 'off' : 'on';
 
         return $out;
     }
@@ -278,5 +289,21 @@ class Simple_Login_Lockdown_Admin extends Simple_Login_Lockdown
         _e('After the number of failed login attempts (specified above), how '.
             'long should the user be locked out?', 'simple-login-lockdown');
         echo '</p>';
+    }
+
+    /**
+     * Callback for the `trust_proxy` settings field.
+     *
+     * @access  public
+     * @since   0.3
+     * @return  void
+     */
+    public function trust_proxy_cb($args)
+    {
+        printf(
+            '<input type="checkbox" name="%1$s" id="%1$s" value="on" %2$s />',
+            esc_attr($args['label_for']),
+            checked('on', self::opt('trust_proxy', 'off'), false)
+        );
     }
 } // end class

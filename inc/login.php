@@ -202,8 +202,56 @@ class Simple_Login_Lockdown
      */
     private static function get_ip()
     {
-        $ip = isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : false;
+        $ip = false;
+
+        if ($_ip = self::get_proxy_ip()) {
+            $ip = $_ip;
+        } elseif (isset($_SERVER['REMOTE_ADDR'])) { 
+            $ip = $_SERVER['REMOTE_ADDR'];
+        }
+
         return apply_filters('simple_login_lockdown_ip', $ip);
+    }
+
+    /**
+     * If we're trusting proxy data, get the X-Forwarded-For header (if present)
+     * and return it's IP.
+     *
+     * @since   0.3
+     * @access  private
+     * @uses    apply_filters
+     * @return  false|string
+     * @static
+     */
+    private static function get_proxy_ip()
+    {
+        $ip = false;
+
+        $h = apply_filters('simple_login_lockdown_proxy_ip_header', 'HTTP_X_FORWARDED_FOR');
+
+        if (self::trust_proxy_data() && !empty($_SERVER[$h])) {
+            $ip_arr = array_map('trim', explode(',', $_SERVER[$h]));
+            $ip = array_shift($ip_array);
+        }
+
+        return apply_filters('simple_login_lockdown_proxy_ip', $ip);
+    }
+
+    /**
+     * Do we trust proxy data?
+     *
+     * @since   0.3
+     * @access  private
+     * @uses    apply_filters
+     * @return  boolean
+     * @static
+     */
+    private static function trust_proxy_data()
+    {
+        return apply_filters(
+            'simple_login_lockdown_trust_proxy',
+            'on' === static::opt('trust_proxy', 'off')
+        );
     }
 
     /**
