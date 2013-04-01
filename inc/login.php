@@ -231,7 +231,7 @@ class Simple_Login_Lockdown
 
         if (self::trust_proxy_data() && !empty($_SERVER[$h])) {
             $ip_arr = array_map('trim', explode(',', $_SERVER[$h]));
-            $ip = array_shift($ip_array);
+            $ip = array_shift($ip_arr);
         }
 
         return apply_filters('simple_login_lockdown_proxy_ip', $ip);
