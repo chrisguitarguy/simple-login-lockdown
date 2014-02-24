@@ -123,6 +123,9 @@ class Simple_Login_Lockdown
         $page = version_compare($wp_version, '3.4.2', '<=') ? 'privacy' : 'reading';
         $error = '';
 
+        if ( !current_user_can('manage_options') )
+            exit("You do not have permission to do this.");
+
         if ( empty($_GET['ip']) )
             $error = __("Invalid IP address.", 'simple-login-lockdown');
         elseif ( !self::is_locked_down($_GET['ip']) )
