@@ -112,6 +112,15 @@ class Simple_Login_Lockdown_Admin extends Simple_Login_Lockdown
     {
         add_action('admin_init', array($this, 'register'));
         add_action('plugin_action_links_' . CD_SLL_NAME, array($this, 'link'));
+        add_action('admin_head-options-reading.php', array($this, 'display_errors'));
+    }
+
+    public function display_errors()
+    {
+        if ( !empty($_GET['simple-login-lockdown-error']) )
+            add_settings_error('general', esc_attr( 'invalid_ip' ), $_GET['simple-login-lockdown-error'], 'error');
+        elseif ( !empty($_GET['simple-login-lockdown-success']) )
+            add_settings_error('general', esc_attr( 'settings_updated' ), $_GET['simple-login-lockdown-success'], 'updated');
     }
 
     /**
@@ -165,11 +174,22 @@ class Simple_Login_Lockdown_Admin extends Simple_Login_Lockdown
             self::SECTION,
             array('label_for' => self::SETTING . '[trust_proxy]', 'key' => 'trust_proxy')
         );
+
+        $lockouts = $this->get_lockouts();
+        if ( $lockouts )
+            add_settings_field(
+                self::SETTING . '[locked_ip_list]',
+                 __('Locked Out', 'simple-login-lockdown'),
+                array($this, 'locked_ip_list'),
+                $this->page,
+                self::SECTION,
+                array('lockouts' => $lockouts)
+            );
     }
 
     /**
      * Adds a "settings" link to the plugin page.
-     * 
+     *
      * @since   0.2
      * @access  public
      * @return  array
@@ -187,7 +207,7 @@ class Simple_Login_Lockdown_Admin extends Simple_Login_Lockdown
 
     /**
      * Validate the settings on way into the database.
-     * 
+     *
      * @since   0.2
      * @access  public
      * @uses    absint
@@ -212,7 +232,7 @@ class Simple_Login_Lockdown_Admin extends Simple_Login_Lockdown
 
     /**
      * The callback for the Simple Login Lockdown settings section
-     * 
+     *
      * @since   0.2
      * @access  public
      * @uses    _e
@@ -225,10 +245,10 @@ class Simple_Login_Lockdown_Admin extends Simple_Login_Lockdown
             'access to your login form.', 'simple-login-lockdown');
         echo '</p>';
     }
-    
+
     /**
      * The callback for the attempt allowance settings field
-     * 
+     *
      * @since   0.2
      * @access  public
      * @uses    selected
@@ -250,10 +270,10 @@ class Simple_Login_Lockdown_Admin extends Simple_Login_Lockdown
         }
         echo '</select>';
     }
-    
+
     /**
      * The callback for the time limit settings field
-     * 
+     *
      * @since   0.2
      * @access  public
      * @uses    selected
@@ -305,5 +325,65 @@ class Simple_Login_Lockdown_Admin extends Simple_Login_Lockdown
             esc_attr($args['label_for']),
             checked('on', self::opt('trust_proxy', 'off'), false)
         );
+    }
+
+    /**
+     * Get an array of lockouts for the current site
+     *
+     * @return array
+     */
+    public function get_lockouts()
+    {
+        global $wpdb;
+
+        return $wpdb->get_results("
+            SELECT option_id, option_name, option_value
+            FROM  $wpdb->options
+            WHERE `option_name` LIKE '_transient_timeout_locked_down_%'
+            ORDER BY option_value
+        ", ARRAY_A);
+    }
+
+    /**
+     * Callback for the blocked ip list section.
+     *
+     * @param  array $args
+     *
+     * @return void
+     */
+    public function locked_ip_list($args)
+    {
+        require_once(dirname(__FILE__).'/helpers.php');
+
+        $lockouts = $args['lockouts'];
+
+        // No lcokouts? Don't display the table
+        if ( !$lockouts )
+            return;
+
+        ?>
+        <style>
+            .simple_login_lockout_ip_list th, .simple_login_lockout_ip_list td {padding:5px;margin:0;width:auto;}
+            .simple_login_lockout_ip_list .actions {width:50px;}
+        </style>
+        <table class='simple_login_lockout_ip_list' width='500' border='1' cellspacing='0' cellpadding='5'>
+            <thead>
+                <th>IP</th>
+                <th>&nbsp;</th>
+            </thead>
+            <tbody>
+                <?php
+                    foreach ( $lockouts as $lockout ):
+                        $ip = explode('_', $lockout['option_name']);
+                        $ip = end($ip);
+                ?>
+                <tr>
+                    <td><?= $ip ?> (<?= simple_login_lockdown_human_time_diff($lockout['option_value']) ?>)</td>
+                    <td class='actions'><input type="button" value="Unlock" onclick="window.location.href='<?= admin_url('admin-ajax.php') ?>?action=simple-login-lockdown-unlock&ip=<?= $ip ?>';" /></td>
+                </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+        <?php
     }
 } // end class

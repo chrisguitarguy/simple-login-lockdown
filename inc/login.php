@@ -103,6 +103,7 @@ class Simple_Login_Lockdown
         add_action('wp_login_failed', array($this, 'failed_login'));
         add_action('login_init', array($this, 'maybe_kill_login'));
         add_action('wp_login', array($this, 'successful_login'));
+        add_action('wp_ajax_simple-login-lockdown-unlock', array($this, 'unlock_ip' ));
 
         load_plugin_textdomain(
             'simple-login-lockdown',
@@ -112,11 +113,38 @@ class Simple_Login_Lockdown
     }
 
     /**
+     *
+     *
+     * @return void
+     */
+    public function unlock_ip()
+    {
+        global $wp_version;
+        $page = version_compare($wp_version, '3.4.2', '<=') ? 'privacy' : 'reading';
+        $error = '';
+
+        if ( !current_user_can('manage_options') )
+            exit("You do not have permission to do this.");
+
+        if ( empty($_GET['ip']) )
+            $error = __("Invalid IP address.", 'simple-login-lockdown');
+        elseif ( !self::is_locked_down($_GET['ip']) )
+            $error = __("IP address is not locked down.", 'simple-login-lockdown');
+        else
+            self::clear_lockdown($_GET['ip']);
+
+        if ( $error )
+            wp_redirect(admin_url('options-'.$page.'.php?settings-updated=true&simple-login-lockdown-error='.urlencode($error)));
+        else
+            wp_redirect(admin_url('options-'.$page.'.php?settings-updated=true&simple-login-lockdown-success='.urlencode('IP unlocked successfully.')));
+    }
+
+    /**
      * Catch failed login attemps due a faulty username/password combination
-     * 
+     *
      * If a login attempt fails, this function will add/update an option with
      * a count of how many times that attempt has failed.
-     * 
+     *
      * @since   0.1
      * @access  public
      * @uses    get_option
@@ -136,9 +164,9 @@ class Simple_Login_Lockdown
     }
 
     /**
-     * Kills the login page via wp_die if login attempt allowance has been 
+     * Kills the login page via wp_die if login attempt allowance has been
      * exceeded or the IP address is locked down.
-     * 
+     *
      * @since   0.1
      * @access  public
      * @return  void
@@ -174,7 +202,7 @@ class Simple_Login_Lockdown
 
     /**
      * Clears all lockdown data on a successful login.
-     * 
+     *
      * @since   0.1
      * @access  public
      * @return  void
@@ -192,9 +220,9 @@ class Simple_Login_Lockdown
 
     /**
      * Get the $_SERVER['REMOTE_ADDR'] value.  Uses apply_filters
-     * so plugins/themes can hook into change the value if they're using a 
+     * so plugins/themes can hook into change the value if they're using a
      * load balancer or behind some other proxy.
-     * 
+     *
      * @since   0.1
      * @access  private
      * @uses    apply_filters
@@ -206,7 +234,7 @@ class Simple_Login_Lockdown
 
         if ($_ip = self::get_proxy_ip()) {
             $ip = $_ip;
-        } elseif (isset($_SERVER['REMOTE_ADDR'])) { 
+        } elseif (isset($_SERVER['REMOTE_ADDR'])) {
             $ip = $_SERVER['REMOTE_ADDR'];
         }
 
