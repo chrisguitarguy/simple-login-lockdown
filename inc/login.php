@@ -103,6 +103,16 @@ class Simple_Login_Lockdown
         add_action('wp_login_failed', array($this, 'failed_login'));
         add_action('login_init', array($this, 'maybe_kill_login'));
         add_action('wp_login', array($this, 'successful_login'));
+        
+        /*
+         * Hack to also block bad xmlrpc requests. This plugin handles
+         * tracking failed logins from xmlrpc fine but only does blocking
+         * on the login page. This also forces the kill attempt on an
+         * xmlrpc request.
+         */
+        if ( defined( 'XMLRPC_REQUEST' ) && XMLRPC_REQUEST ) {
+            $this->maybe_kill_login();
+        }
 
         load_plugin_textdomain(
             'simple-login-lockdown',
