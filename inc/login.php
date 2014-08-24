@@ -101,8 +101,8 @@ class Simple_Login_Lockdown
     public function _setup()
     {
         add_action('wp_login_failed', array($this, 'failed_login'));
-        add_action('login_init', array($this, 'maybe_kill_login'));
         add_action('wp_login', array($this, 'successful_login'));
+        add_filter('authenticate', array($this, 'maybe_block_login'), 1);
 
         load_plugin_textdomain(
             'simple-login-lockdown',
@@ -126,13 +126,21 @@ class Simple_Login_Lockdown
      */
     public function failed_login()
     {
-        if(!($ip = self::get_ip()))
+        $ip = self::get_ip();
+        if (!$ip) {
             return;
+        }
 
-        if(apply_filters('simple_login_lockdown_allow_ip', false, $ip))
+        if (apply_filters('simple_login_lockdown_allow_ip', false, $ip)) {
             return;
+        }
 
         self::inc_count($ip);
+        if (self::get_count($ip) > self::opt('limit', 5)) {
+            self::delete_count($ip);
+            self::set_lockdown($ip);
+            do_action('simple_login_lockdown_count_reached', $ip);
+        }
     }
 
     /**
@@ -140,36 +148,29 @@ class Simple_Login_Lockdown
      * exceeded or the IP address is locked down.
      * 
      * @since   0.1
-     * @access  public
+     * @param   WP_User|WP_Error|null $user
      * @return  void
      */
-    public function maybe_kill_login()
+    public function maybe_block_login($user)
     {
-        if(!($ip = self::get_ip()))
-            return;
-
-        $die = false;
-        if(($count = self::get_count($ip)) && $count > absint(self::opt('limit', 5)))
-        {
-            self::delete_count($ip);
-            self::set_lockdown($ip);
-            $die = true;
-            do_action('simple_login_lockdown_count_reached', $ip);
-        }
-        elseif(self::is_locked_down($ip))
-        {
-            $die = true;
-            do_action('simple_login_lockdown_attempt', $ip);
+        $ip = self::get_ip();
+        if (!$ip) {
+            return $user;
         }
 
-        if(apply_filters('simple_login_lockdown_should_die', $die, $ip))
-        {
-            wp_die(
-                __('Too many login attemps from one IP address! Please take a break and try again later', 'simple-login-lockdown'),
-                __('Too many login attemps', 'simple-login-lockdown'),
-                array('response' => apply_filters('simple_login_lockdown_response', 403))
-            );
+        if (!self::is_locked_down($ip)) {
+            return $user;
         }
+
+        do_action('simple_login_lockdown_attempt', $ip);
+
+        remove_action('wp_login_failed', array($this, 'failed_login'));
+        remove_filter('authenticate', 'wp_authenticate_username_password', 20, 3);
+
+        return new \WP_Error(
+            'simple_login_lockdown_locked',
+            __('<strong>LOCKED OUT:</strong> Too many login attempts from one IP address! Please take a break and try again.', 'simple-login-locked')
+        );
     }
 
     /**
