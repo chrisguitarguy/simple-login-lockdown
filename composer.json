@@ -1,0 +1,10 @@
+{
+    "name": "chrisguitarguy/simple-login-lockdown",
+    "description": "Simple prevention of brute force login attemps on your WordPress site.",
+    "keywords": ["wordpress", "login"],
+    "type": "wordpress-plugin",
+    "license": "MIT",
+    "require": {
+        "php": ">=5.3"
+    }
+}
